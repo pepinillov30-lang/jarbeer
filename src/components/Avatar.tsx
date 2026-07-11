@@ -7,18 +7,20 @@ interface AvatarProps {
   responding?: boolean;
 }
 
-export function Avatar({ size = 180, active = false, responding = false }: AvatarProps) {
+export function Avatar({ size = 260, active = false, responding = false }: AvatarProps) {
   const id = useId().replace(/:/g, '');
-  const center = size / 2;
-  const r1 = size * 0.47;
-  const r2 = size * 0.40;
-  const r3 = size * 0.33;
+  const cx = size / 2;
+  const cy = size / 2;
 
-  const glowColor = responding
-    ? 'rgba(250,106,0,'
-    : active
-    ? 'rgba(0,225,255,'
-    : 'rgba(0,135,255,';
+  const coreRadius = size * 0.32;
+  const r1 = size * 0.45;
+  const r2 = size * 0.38;
+  const r3 = size * 0.52;
+
+  const baseHue = responding ? '#FFAA00' : active ? '#00e1ff' : '#0087ff';
+  const glowRgb = responding ? '255,170,0' : active ? '0,225,255' : '0,135,255';
+  const glowIntensity = responding ? 0.8 : active ? 0.65 : 0.35;
+  const breathDuration = responding ? 1.2 : active ? 2.0 : 5.5;
 
   return (
     <div
@@ -26,301 +28,243 @@ export function Avatar({ size = 180, active = false, responding = false }: Avata
       style={{ width: size, height: size }}
       aria-hidden
     >
-      {/* ---- Outer ambient glow ---- */}
+      {/* ── Outer ambient halo ── */}
       <motion.div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `radial-gradient(circle, ${glowColor}0.18) 0%, transparent 70%)`,
-          filter: 'blur(20px)',
+          background: `radial-gradient(circle, rgba(${glowRgb},${glowIntensity * 0.25}) 0%, rgba(${glowRgb},0.05) 50%, transparent 75%)`,
+          filter: `blur(${size * 0.12}px)`,
         }}
-        animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.9, 0.5] }}
-        transition={{ duration: responding ? 1.5 : 4, repeat: Infinity, ease: 'easeInOut' }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: breathDuration, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      {/* ---- SVG ring system ---- */}
+      {/* ── SVG: rings, equator, particles ── */}
       <svg
         viewBox={`0 0 ${size} ${size}`}
         className="absolute inset-0"
         style={{ overflow: 'visible' }}
       >
         <defs>
-          <radialGradient id={`${id}-grd`} cx="50%" cy="50%">
-            <stop offset="0%" stopColor={responding ? '#FA6A00' : active ? '#00e1ff' : '#0087ff'} stopOpacity="0.25" />
+          {/* Core radial gradient */}
+          <radialGradient id={`${id}-core`} cx="50%" cy="50%">
+            <stop offset="0%"   stopColor={baseHue} stopOpacity="0.18" />
+            <stop offset="60%"  stopColor={baseHue} stopOpacity="0.06" />
             <stop offset="100%" stopColor="transparent" />
           </radialGradient>
-          <filter id={`${id}-blur`}>
-            <feGaussianBlur stdDeviation="3" />
+
+          {/* Image clip */}
+          <clipPath id={`${id}-clip`}>
+            <circle cx={cx} cy={cy} r={coreRadius} />
+          </clipPath>
+
+          {/* Glow filter */}
+          <filter id={`${id}-glow`} x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
+
+          {/* Subtle inner border gradient */}
+          <radialGradient id={`${id}-border`} cx="50%" cy="50%">
+            <stop offset="80%"  stopColor="transparent" />
+            <stop offset="100%" stopColor={`rgba(${glowRgb},0.6)`} />
+          </radialGradient>
         </defs>
 
-        {/* Base circle fill */}
+        {/* Background corona */}
         <motion.circle
-          cx={center} cy={center} r={r3 * 0.85}
-          fill={`url(#${id}-grd)`}
-          animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: `${center}px ${center}px` }}
+          cx={cx} cy={cy} r={coreRadius + 4}
+          fill={`url(#${id}-core)`}
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: breathDuration, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
         />
 
-        {/* Ring 1 — outer, slow */}
+        {/* Ring 3 — outermost, very slow */}
         <motion.circle
-          cx={center} cy={center} r={r1}
+          cx={cx} cy={cy} r={r3}
           fill="none"
-          stroke={responding ? 'rgba(250,106,0,0.35)' : 'rgba(0,225,255,0.22)'}
+          stroke={`rgba(${glowRgb},0.1)`}
           strokeWidth="1"
-          strokeDasharray="4 8"
+          strokeDasharray="6 14"
           animate={{ rotate: 360 }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
-          style={{ transformOrigin: `${center}px ${center}px` }}
-        />
-        {/* Ring 1 dot */}
-        <motion.circle
-          cx={center} cy={center - r1} r="3.5"
-          fill={responding ? '#FA6A00' : '#00e1ff'}
-          style={{
-            filter: `drop-shadow(0 0 6px ${responding ? '#FA6A00' : '#00e1ff'})`,
-            transformOrigin: `${center}px ${center}px`,
-          }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
         />
 
-        {/* Ring 2 — mid, opposite */}
+        {/* Ring 1 — mid outer, slow */}
         <motion.circle
-          cx={center} cy={center} r={r2}
+          cx={cx} cy={cy} r={r1}
           fill="none"
-          stroke={responding ? 'rgba(250,106,0,0.25)' : 'rgba(0,135,255,0.18)'}
+          stroke={`rgba(${glowRgb},0.22)`}
+          strokeWidth="1.2"
+          strokeDasharray="5 10"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
+        />
+        {/* Ring 1 orbiting dot */}
+        <motion.circle
+          cx={cx} cy={cy - r1} r={4}
+          fill={baseHue}
+          style={{ filter: `drop-shadow(0 0 8px ${baseHue})`, transformOrigin: `${cx}px ${cy}px` }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+        />
+
+        {/* Ring 2 — reverse, mid */}
+        <motion.circle
+          cx={cx} cy={cy} r={r2}
+          fill="none"
+          stroke={`rgba(${glowRgb},0.15)`}
           strokeWidth="1"
-          strokeDasharray="2 6"
+          strokeDasharray="3 8"
           animate={{ rotate: -360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-          style={{ transformOrigin: `${center}px ${center}px` }}
+          transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
         />
-        {/* Ring 2 dot */}
+        {/* Ring 2 orbiting dot */}
         <motion.circle
-          cx={center} cy={center + r2} r="2.5"
-          fill={responding ? 'rgba(250,106,0,0.9)' : 'rgba(0,135,255,0.9)'}
-          style={{ transformOrigin: `${center}px ${center}px` }}
+          cx={cx} cy={cy + r2} r={3}
+          fill={`rgba(${glowRgb},0.85)`}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
           animate={{ rotate: -360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
         />
 
-        {/* Ring 3 — inner glow ring */}
-        <motion.circle
-          cx={center} cy={center} r={r3}
-          fill="none"
-          stroke={responding ? 'rgba(250,106,0,0.4)' : active ? 'rgba(0,225,255,0.35)' : 'rgba(0,135,255,0.18)'}
-          strokeWidth="1.5"
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Equator line — holographic belt */}
+        {/* Equator belt */}
         <motion.ellipse
-          cx={center} cy={center} rx={r3} ry={r3 * 0.25}
+          cx={cx} cy={cy} rx={coreRadius} ry={coreRadius * 0.22}
           fill="none"
-          stroke={responding ? 'rgba(250,106,0,0.3)' : 'rgba(0,225,255,0.18)'}
+          stroke={`rgba(${glowRgb},0.2)`}
           strokeWidth="1"
-          strokeDasharray="3 5"
+          strokeDasharray="4 6"
           animate={{ rotate: 360 }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
-          style={{ transformOrigin: `${center}px ${center}px` }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
         />
 
-        {/* Scan line inside */}
-        <motion.line
-          x1={center - r3 * 0.8} y1={center}
-          x2={center + r3 * 0.8} y2={center}
-          stroke={responding ? 'rgba(250,106,0,0.5)' : 'rgba(0,225,255,0.4)'}
-          strokeWidth="0.8"
-          animate={{ y: [center - r3 * 0.8, center + r3 * 0.8, center - r3 * 0.8], opacity: [0, 1, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: `${center}px ${center}px` }}
+        {/* Core face image */}
+        <motion.image
+          href="/avatar.png"
+          x={cx - coreRadius}
+          y={cy - coreRadius}
+          width={coreRadius * 2}
+          height={coreRadius * 2}
+          clipPath={`url(#${id}-clip)`}
+          preserveAspectRatio="xMidYMid slice"
+          animate={{ opacity: [0.88, 1, 0.88] }}
+          transition={{ duration: breathDuration, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ filter: `drop-shadow(0 0 12px rgba(${glowRgb},0.5))` }}
         />
+
+        {/* Inner border glow ring */}
+        <motion.circle
+          cx={cx} cy={cy} r={coreRadius}
+          fill="none"
+          stroke={`rgba(${glowRgb},${responding ? 0.7 : active ? 0.55 : 0.3})`}
+          strokeWidth="1.5"
+          filter={`url(#${id}-glow)`}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: breathDuration * 0.6, repeat: Infinity, ease: 'easeInOut' }}
+        />
+
+        {/* Scan line inside core */}
+        <motion.line
+          x1={cx - coreRadius * 0.85} y1={cy}
+          x2={cx + coreRadius * 0.85} y2={cy}
+          stroke={`rgba(${glowRgb},0.45)`}
+          strokeWidth="0.8"
+          animate={{
+            y: [cy - coreRadius * 0.75, cy + coreRadius * 0.75, cy - coreRadius * 0.75],
+            opacity: [0, 0.8, 0],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          clipPath={`url(#${id}-clip)`}
+        />
+
+        {/* Data readout ticks around core */}
+        {[0, 60, 120, 180, 240, 300].map((deg, i) => {
+          const rad = (deg * Math.PI) / 180;
+          const x1 = cx + Math.cos(rad) * (coreRadius + 1);
+          const y1 = cy + Math.sin(rad) * (coreRadius + 1);
+          const x2 = cx + Math.cos(rad) * (coreRadius + 8);
+          const y2 = cy + Math.sin(rad) * (coreRadius + 8);
+          return (
+            <motion.line
+              key={i}
+              x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke={`rgba(${glowRgb},0.5)`}
+              strokeWidth="1.5"
+              animate={{ opacity: [0.2, 0.9, 0.2] }}
+              transition={{ duration: 2, repeat: Infinity, delay: i * 0.3, ease: 'easeInOut' }}
+            />
+          );
+        })}
       </svg>
 
-      {/* ---- Floating bottle ---- */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center"
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <HolographicBottle size={size * 0.48} active={active} responding={responding} />
-      </motion.div>
+      {/* ── Floating particles ── */}
+      {[...Array(8)].map((_, i) => (
+        <AvatarParticle key={i} index={i} size={size} glowRgb={glowRgb} baseHue={baseHue} />
+      ))}
 
-      {/* ---- Active pulse rings ---- */}
+      {/* ── Active pulse rings ── */}
       {(active || responding) &&
-        [0, 0.55, 1.1].map((d) => (
+        [0, 0.6, 1.2].map((delay) => (
           <motion.div
-            key={d}
+            key={delay}
             className="absolute inset-0 rounded-full"
             style={{
-              border: `1px solid ${responding ? 'rgba(250,106,0,0.5)' : 'rgba(0,225,255,0.4)'}`,
+              border: `1px solid rgba(${glowRgb},0.4)`,
             }}
-            initial={{ scale: 1, opacity: 0.6 }}
-            animate={{ scale: 1.7, opacity: 0 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeOut', delay: d }}
+            initial={{ scale: 1, opacity: 0.5 }}
+            animate={{ scale: 1.6, opacity: 0 }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut', delay }}
           />
         ))}
-
-      {/* ---- Floating particles ---- */}
-      {[...Array(6)].map((_, i) => (
-        <Particle key={i} index={i} size={size} responding={responding} />
-      ))}
     </div>
   );
 }
 
-function Particle({ index, size, responding }: { index: number; size: number; responding: boolean }) {
-  const angle = (index / 6) * Math.PI * 2;
-  const radius = size * (0.28 + (index % 3) * 0.07);
-  const x = size / 2 + Math.cos(angle) * radius - 3;
-  const y = size / 2 + Math.sin(angle) * radius - 3;
-  const dur = 3 + index * 0.7;
+function AvatarParticle({
+  index,
+  size,
+  glowRgb,
+  baseHue,
+}: {
+  index: number;
+  size: number;
+  glowRgb: string;
+  baseHue: string;
+}) {
+  const angle = (index / 8) * Math.PI * 2;
+  const orbitRadius = size * (0.38 + (index % 3) * 0.06);
+  const px = size / 2 + Math.cos(angle) * orbitRadius - 3;
+  const py = size / 2 + Math.sin(angle) * orbitRadius - 3;
+  const dur = 2.8 + index * 0.55;
+  const pSize = index % 2 === 0 ? 5 : 3;
 
   return (
     <motion.div
-      className="absolute h-1.5 w-1.5 rounded-full"
+      className="absolute rounded-full"
       style={{
-        left: x,
-        top: y,
-        background: responding ? '#FA6A00' : '#00e1ff',
-        boxShadow: responding
-          ? '0 0 6px rgba(250,106,0,0.8)'
-          : '0 0 6px rgba(0,225,255,0.8)',
+        left: px,
+        top: py,
+        width: pSize,
+        height: pSize,
+        background: baseHue,
+        boxShadow: `0 0 ${pSize * 2}px rgba(${glowRgb},0.9)`,
       }}
       animate={{
-        opacity: [0.1, 0.9, 0.1],
-        scale: [0.5, 1.2, 0.5],
-        x: [0, Math.cos(angle + 1) * 8, 0],
-        y: [0, Math.sin(angle + 1) * 6, 0],
+        opacity: [0.05, 0.95, 0.05],
+        scale: [0.4, 1.3, 0.4],
+        x: [0, Math.cos(angle + 1.2) * 10, 0],
+        y: [0, Math.sin(angle + 1.2) * 8, 0],
       }}
-      transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut' }}
+      transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut', delay: index * 0.35 }}
     />
-  );
-}
-
-function HolographicBottle({
-  size,
-  active,
-  responding,
-}: {
-  size: number;
-  active: boolean;
-  responding: boolean;
-}) {
-  const w = size;
-  const h = size * 1.6;
-  const capColor = responding ? '#FA6A00' : active ? '#00e1ff' : '#0087ff';
-  const glassOpacity = responding ? 0.35 : active ? 0.3 : 0.18;
-  const strokeOpacity = responding ? 0.9 : active ? 0.8 : 0.55;
-  const liquidColor = responding ? 'rgba(250,106,0,' : 'rgba(255,184,0,';
-
-  return (
-    <svg width={w} height={h} viewBox="0 0 100 160" fill="none">
-      <defs>
-        <linearGradient id="hb-body" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={`rgba(0,225,255,${glassOpacity + 0.1})`} />
-          <stop offset="50%" stopColor={`rgba(0,135,255,${glassOpacity})`} />
-          <stop offset="100%" stopColor={`rgba(0,30,60,${glassOpacity + 0.1})`} />
-        </linearGradient>
-        <linearGradient id="hb-cap" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={capColor} />
-          <stop offset="100%" stopColor={capColor} stopOpacity="0.6" />
-        </linearGradient>
-        <linearGradient id="hb-liq" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={`${liquidColor}0.45)`} />
-          <stop offset="100%" stopColor={`${liquidColor}0.75)`} />
-        </linearGradient>
-        <filter id="hb-glow">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
-
-      {/* Cap */}
-      <rect x="38" y="4" width="24" height="15" rx="4"
-        fill="url(#hb-cap)"
-        filter="url(#hb-glow)" />
-      <rect x="35" y="16" width="30" height="8" rx="3"
-        fill="url(#hb-cap)" opacity="0.8" />
-
-      {/* Bottle body */}
-      <path
-        d="M40 24 L40 42 Q40 48 37 52 L32 64 Q30 70 30 78 L30 130 Q30 146 50 146 Q70 146 70 130 L70 78 Q70 70 68 64 L63 52 Q60 48 60 42 L60 24 Z"
-        fill="url(#hb-body)"
-        stroke={`rgba(0,225,255,${strokeOpacity})`}
-        strokeWidth="1.5"
-        filter="url(#hb-glow)"
-      />
-
-      {/* Liquid */}
-      <motion.path
-        d="M33 80 Q50 75 67 80 L67 130 Q67 143 50 143 Q33 143 33 130 Z"
-        fill="url(#hb-liq)"
-        animate={{ opacity: [0.65, 0.95, 0.65] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-      />
-
-      {/* Liquid surface shimmer */}
-      <motion.ellipse
-        cx="50" cy="80" rx="17" ry="3.5"
-        fill={`${liquidColor}0.4)`}
-        animate={{ scaleX: [1, 1.05, 1], opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 2.5, repeat: Infinity }}
-      />
-
-      {/* Highlight streak */}
-      <rect x="36" y="65" width="4" height="60" rx="2"
-        fill="rgba(255,255,255,0.12)" />
-      <rect x="42" y="42" width="3" height="22" rx="1.5"
-        fill="rgba(255,255,255,0.08)" />
-
-      {/* Label panel */}
-      <rect x="34" y="90" width="32" height="32" rx="3"
-        fill="rgba(5,6,8,0.7)"
-        stroke={`rgba(0,225,255,${strokeOpacity * 0.6})`}
-        strokeWidth="0.8" />
-      <text
-        x="50" y="107"
-        textAnchor="middle"
-        fontSize="8.5"
-        fontFamily="Orbitron, sans-serif"
-        fontWeight="700"
-        fill={active || responding ? capColor : 'rgba(0,225,255,0.7)'}
-      >
-        JAR
-      </text>
-      <text
-        x="50" y="117"
-        textAnchor="middle"
-        fontSize="5"
-        fontFamily="JetBrains Mono, monospace"
-        fill="rgba(255,255,255,0.35)"
-      >
-        BEER OS
-      </text>
-
-      {/* Data dots */}
-      {(active || responding) && (
-        <>
-          <motion.circle cx="26" cy="75" r="2"
-            fill={responding ? '#FA6A00' : '#00e1ff'}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity }}
-          />
-          <motion.circle cx="74" cy="100" r="1.5"
-            fill={responding ? '#FA6A00' : '#00e1ff'}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, delay: 0.6 }}
-          />
-          <motion.circle cx="26" cy="120" r="1.5"
-            fill={responding ? '#FA6A00' : '#00e1ff'}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, delay: 1.2 }}
-          />
-        </>
-      )}
-    </svg>
   );
 }

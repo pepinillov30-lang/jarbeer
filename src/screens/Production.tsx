@@ -5,7 +5,6 @@ import {
   Droplets,
   FlaskConical,
   Leaf,
-  Dna,
   FileText,
   Check,
   Clock,
@@ -14,42 +13,63 @@ import {
   X,
   CheckCircle2,
   CircleDot,
+  Plus,
+  Loader2,
   Beaker,
 } from 'lucide-react';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { GlassCard } from '../components/GlassCard';
 import { productionData } from '../data/mockData';
+
+type PdfState = 'idle' | 'preparing' | 'generating' | 'done';
+
+const STAGES = [
+  'Maceración', 'Filtrado', 'Ebullición',
+  'Whirlpool', 'Fermentación', 'Maduración', 'Envasado',
+];
 
 export function Production() {
   const [fields, setFields] = useState({
     batch: productionData.batch,
     brewer: productionData.brewer,
+    startDate: productionData.startDate,
     plato: String(productionData.plato),
     ph: String(productionData.ph),
     currentTemp: String(productionData.currentTemp),
     observations: productionData.observations,
   });
   const [editing, setEditing] = useState<string | null>(null);
-  const [pdfState, setPdfState] = useState<'idle' | 'generating' | 'done'>('idle');
+  const [pdfState, setPdfState] = useState<PdfState>('idle');
 
-  const handleEdit = (field: string, value: string) => {
-    setFields((prev) => ({ ...prev, [field]: value }));
-  };
+  const [maltas, setMaltas] = useState(productionData.maltas.map((m, i) => ({ ...m, id: `m${i}` })));
+  const [lupulos, setLupulos] = useState(productionData.lupulos.map((l, i) => ({ ...l, id: `l${i}` })));
 
   const handleGeneratePdf = () => {
     if (pdfState !== 'idle') return;
-    setPdfState('generating');
-    setTimeout(() => setPdfState('done'), 2400);
-    setTimeout(() => setPdfState('idle'), 4200);
+    setPdfState('preparing');
+    setTimeout(() => setPdfState('generating'), 1600);
+    setTimeout(() => setPdfState('done'), 3200);
+    setTimeout(() => setPdfState('idle'), 5500);
   };
 
+  const addMalta = () => {
+    setMaltas((prev) => [...prev, { id: `m${Date.now()}`, name: 'Nueva malta', amount: '0 kg', ebc: 0, supplier: '—' }]);
+  };
+
+  const addLupulo = () => {
+    setLupulos((prev) => [...prev, { id: `l${Date.now()}`, name: 'Nuevo lúpulo', alpha: '0%', amount: '0 g', addition: '—' }]);
+  };
+
+  const stageIndex = STAGES.indexOf(productionData.stage);
+
   return (
-    <div className="flex min-h-full flex-col pb-28">
+    <div className="flex min-h-full flex-col pb-32">
       <ScreenHeader
         title="Ficha de Producción"
         subtitle={`Lote ${fields.batch} · ${productionData.recipe}`}
         right={
           <span
-            className="shrink-0 rounded-lg px-3 py-1 font-mono text-[10px] uppercase tracking-wider"
+            className="rounded-lg px-3 py-1 font-mono text-[10px] uppercase tracking-wider"
             style={{
               background: 'rgba(0,225,255,0.08)',
               border: '1px solid rgba(0,225,255,0.2)',
@@ -61,445 +81,411 @@ export function Production() {
         }
       />
 
-      <div className="flex flex-col gap-3 px-4">
-        {/* Stage banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="hud rounded-2xl p-4"
-          style={{
-            background: 'linear-gradient(135deg, rgba(0,135,255,0.08), rgba(0,225,255,0.04))',
-            border: '1px solid rgba(0,225,255,0.15)',
-            boxShadow: '0 4px 30px rgba(0,135,255,0.1)',
-          }}
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-500">
-                Fase actual
-              </p>
-              <p
-                className="mt-1 font-display text-2xl font-bold text-cyan-300"
-                style={{ textShadow: '0 0 12px rgba(0,225,255,0.5)' }}
-              >
-                {productionData.stage}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-mono text-[10px] text-ink-500">Progreso</p>
-              <p className="font-display text-3xl font-black text-white">
-                {productionData.stageProgress}
-                <span className="text-lg text-ink-400">%</span>
-              </p>
-            </div>
+      <div className="flex flex-col gap-4 px-4">
+
+        {/* ── Timeline ── */}
+        <GlassCard className="overflow-hidden px-0 py-0" corners delay={0.08}>
+          <div className="flex overflow-x-auto px-4 pb-3 pt-4" style={{ scrollbarWidth: 'none' }}>
+            {productionData.timeline.map((item, i) => {
+              const isCurrent = STAGES.indexOf(item.stage) === stageIndex;
+              const isDone = item.done;
+              return (
+                <div key={item.stage} className="flex shrink-0 flex-col items-center" style={{ minWidth: 70 }}>
+                  <div className="relative flex flex-col items-center">
+                    <div
+                      className="relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300"
+                      style={{
+                        background: isDone ? 'rgba(0,225,255,0.12)' : isCurrent ? 'rgba(255,170,0,0.15)' : 'rgba(13,24,36,0.6)',
+                        border: isDone ? '1.5px solid rgba(0,225,255,0.4)' : isCurrent ? '1.5px solid rgba(255,170,0,0.6)' : '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      {isDone
+                        ? <Check size={14} style={{ color: '#00e1ff' }} strokeWidth={2.5} />
+                        : isCurrent
+                        ? <CircleDot size={14} style={{ color: '#FFAA00' }} />
+                        : <Clock size={12} style={{ color: 'rgba(74,96,112,0.5)' }} />
+                      }
+                      {isCurrent && (
+                        <motion.div
+                          className="absolute inset-0 rounded-full"
+                          style={{ border: '1px solid rgba(255,170,0,0.4)' }}
+                          animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+                        />
+                      )}
+                    </div>
+                    {i < productionData.timeline.length - 1 && (
+                      <div
+                        className="absolute left-[calc(50%+18px)] top-4 h-px"
+                        style={{
+                          width: 34,
+                          background: isDone ? 'rgba(0,225,255,0.3)' : 'rgba(255,255,255,0.07)',
+                        }}
+                      />
+                    )}
+                  </div>
+                  <span
+                    className="mt-2 text-center font-mono text-[8px] leading-tight"
+                    style={{
+                      color: isDone ? '#00e1ff' : isCurrent ? '#FFAA00' : 'rgba(74,96,112,0.5)',
+                      maxWidth: 60,
+                    }}
+                  >
+                    {item.stage}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink-800">
+
+          {/* Progress bar */}
+          <div className="mx-4 mb-4 h-1 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
             <motion.div
               className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg, #0057a8, #0087ff, #00e1ff)' }}
+              style={{ background: 'linear-gradient(90deg, #00e1ff, #FFAA00)' }}
               initial={{ width: 0 }}
               animate={{ width: `${productionData.stageProgress}%` }}
-              transition={{ duration: 1.4, ease: 'easeOut', delay: 0.3 }}
+              transition={{ duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             />
           </div>
-        </motion.div>
+        </GlassCard>
 
-        {/* Editable fields — main info */}
-        <SectionTitle>Información general</SectionTitle>
-        <div className="grid grid-cols-2 gap-3">
-          <EditableField
-            icon={<FlaskConical size={14} />}
-            label="Lote"
-            field="batch"
-            value={fields.batch}
-            editing={editing === 'batch'}
-            onEdit={() => setEditing('batch')}
-            onClose={() => setEditing(null)}
-            onChange={(v) => handleEdit('batch', v)}
-          />
-          <EditableField
-            icon={<User size={14} />}
-            label="Cervecero"
-            field="brewer"
-            value={fields.brewer}
-            editing={editing === 'brewer'}
-            onEdit={() => setEditing('brewer')}
-            onClose={() => setEditing(null)}
-            onChange={(v) => handleEdit('brewer', v)}
-          />
-        </div>
-
-        {/* Live measurements */}
-        <SectionTitle>Métricas en tiempo real</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <EditableField
-            icon={<Thermometer size={14} />}
-            label="Temp. actual"
-            field="currentTemp"
-            value={fields.currentTemp}
-            unit="°C"
-            editing={editing === 'currentTemp'}
-            onEdit={() => setEditing('currentTemp')}
-            onClose={() => setEditing(null)}
-            onChange={(v) => handleEdit('currentTemp', v)}
-            accent="amber"
-          />
-          <EditableField
-            icon={<Droplets size={14} />}
-            label="°Plato"
-            field="plato"
-            value={fields.plato}
-            editing={editing === 'plato'}
-            onEdit={() => setEditing('plato')}
-            onClose={() => setEditing(null)}
-            onChange={(v) => handleEdit('plato', v)}
-            accent="cyan"
-          />
-          <EditableField
-            icon={<Beaker size={14} />}
-            label="pH"
-            field="ph"
-            value={fields.ph}
-            editing={editing === 'ph'}
-            onEdit={() => setEditing('ph')}
-            onClose={() => setEditing(null)}
-            onChange={(v) => handleEdit('ph', v)}
-            accent="electric"
-          />
-          <div
-            className="hud rounded-xl p-3"
-            style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <div className="flex items-center gap-1.5 mb-2">
-              <FlaskConical size={14} className="text-emerald-400" />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-ink-500">Vol.</span>
-            </div>
-            <p className="font-display text-xl font-bold text-emerald-300">{productionData.volume}</p>
-            <p className="font-mono text-[10px] text-ink-600">litros</p>
-          </div>
-        </div>
-
-        {/* Lab specs */}
-        <SectionTitle>Especificaciones</SectionTitle>
-        <div
-          className="grid grid-cols-3 gap-2 rounded-2xl p-4"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
-        >
-          {[
-            { l: 'OG', v: productionData.og.toFixed(3) },
-            { l: 'FG', v: productionData.fg.toFixed(3) },
-            { l: 'Atenuación', v: `${productionData.attenuation}%` },
-            { l: 'IBU', v: `${productionData.ibu}` },
-            { l: 'Color', v: `${productionData.ebc} EBC` },
-            { l: 'ABV', v: `${productionData.abv}%` },
-            { l: 'CO₂', v: `${productionData.carbonation} vol` },
-            { l: 'Objetivo pH', v: productionData.targetPh },
-            { l: '°Plato obj.', v: `${productionData.targetPlato}` },
-          ].map((s) => (
-            <SpecCell key={s.l} label={s.l} value={s.v} />
-          ))}
-        </div>
-
-        {/* Maltas */}
-        <SectionTitle icon={<Thermometer size={14} className="text-amber-400" />}>Maltas</SectionTitle>
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ border: '1px solid rgba(255,255,255,0.05)' }}
-        >
-          {productionData.maltas.map((m, i) => (
-            <IngredientRow
-              key={m.name}
-              name={m.name}
-              meta={`${m.amount}`}
-              badge={`${m.ebc} EBC`}
-              tag={m.supplier}
-              last={i === productionData.maltas.length - 1}
-            />
-          ))}
-        </div>
-
-        {/* Lúpulos */}
-        <SectionTitle icon={<Leaf size={14} className="text-emerald-400" />}>Lúpulos</SectionTitle>
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ border: '1px solid rgba(255,255,255,0.05)' }}
-        >
-          {productionData.lupulos.map((h, i) => (
-            <IngredientRow
-              key={`${h.name}-${i}`}
-              name={h.name}
-              meta={`${h.amount} · α ${h.alpha}`}
-              badge={h.addition}
-              tag="HOP"
-              last={i === productionData.lupulos.length - 1}
-            />
-          ))}
-        </div>
-
-        {/* Levadura */}
-        <SectionTitle icon={<Dna size={14} className="text-electric-400" />}>Levadura</SectionTitle>
-        <div
-          className="rounded-2xl p-4"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="font-display text-sm font-bold text-white">{productionData.levadura.name}</p>
-              <p className="font-mono text-[11px] text-ink-500">{productionData.levadura.lab} · {productionData.levadura.format}</p>
-            </div>
-            <span
-              className="rounded-lg px-2.5 py-1 font-mono text-[10px] font-bold"
-              style={{ background: 'rgba(0,135,255,0.1)', border: '1px solid rgba(0,135,255,0.2)', color: '#339fff' }}
-            >
-              YEAST
-            </span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <SpecCell label="Inoculación" value={productionData.levadura.pitch} />
-            <SpecCell label="Atenuación" value={productionData.levadura.attenuation} />
-            <SpecCell label="Rango temp." value={productionData.levadura.tempRange} />
-          </div>
-        </div>
-
-        {/* Observaciones */}
-        <SectionTitle>Observaciones</SectionTitle>
-        <div className="relative">
-          <textarea
-            value={fields.observations}
-            onChange={(e) => handleEdit('observations', e.target.value)}
-            rows={3}
-            className="w-full resize-none rounded-2xl px-4 py-3 font-mono text-sm text-white placeholder:text-ink-600 focus:outline-none focus:ring-0"
-            style={{
-              background: 'rgba(255,255,255,0.025)',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-            onFocus={(e) => { e.currentTarget.style.border = '1px solid rgba(0,225,255,0.25)'; }}
-            onBlur={(e) => { e.currentTarget.style.border = '1px solid rgba(255,255,255,0.08)'; }}
-            placeholder="Notas del cervecero..."
-          />
-        </div>
-
-        {/* Timeline */}
-        <SectionTitle>Proceso de elaboración</SectionTitle>
-        <div
-          className="rounded-2xl p-4"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
-        >
-          <div className="relative">
-            <div
-              className="absolute left-[11px] top-3 bottom-3 w-px"
-              style={{ background: 'linear-gradient(180deg, rgba(0,225,255,0.5), rgba(0,135,255,0.2), rgba(255,255,255,0.05))' }}
-            />
-            {productionData.timeline.map((step, i) => (
-              <motion.div
-                key={step.stage}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + i * 0.06 }}
-                className="relative flex items-center gap-4 py-2.5"
-              >
-                <div
-                  className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
-                    step.done
-                      ? 'border-cyan-400 bg-cyan-500/15'
-                      : 'border-ink-700 bg-ink-900'
-                  }`}
-                >
-                  {step.done ? (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400 }}>
-                      <Check size={11} className="text-cyan-300" strokeWidth={3} />
-                    </motion.div>
-                  ) : (
-                    <CircleDot size={9} className="text-ink-700" />
-                  )}
-                </div>
-                <div className="flex flex-1 items-center justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${step.done ? 'text-white' : 'text-ink-500'}`}>
-                      {step.stage}
-                    </p>
-                    <p className="font-mono text-[10px] text-ink-700">{step.duration}</p>
-                  </div>
-                  {step.temp > 0 && (
-                    <span className={`font-mono text-xs ${step.done ? 'text-amber-300/80' : 'text-ink-700'}`}>
-                      {step.temp}°C
-                    </span>
-                  )}
-                </div>
-              </motion.div>
+        {/* ── Datos generales ── */}
+        <Section title="Datos generales" icon={<FileText size={14} />} delay={0.12}>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { key: 'batch',     label: 'Nº Lote',          icon: <FileText size={13}/> },
+              { key: 'brewer',    label: 'Maestro',           icon: <User size={13}/> },
+              { key: 'startDate', label: 'Fecha inicio',      icon: <Clock size={13}/> },
+              { key: 'plato',     label: '°Plato',            icon: <Droplets size={13}/> },
+              { key: 'ph',        label: 'pH',                icon: <Droplets size={13}/> },
+              { key: 'currentTemp', label: 'Temperatura (°C)', icon: <Thermometer size={13}/> },
+            ].map(({ key, label, icon }) => (
+              <EditableField
+                key={key}
+                fieldKey={key}
+                label={label}
+                icon={icon}
+                value={fields[key as keyof typeof fields]}
+                isEditing={editing === key}
+                onEdit={() => setEditing(key)}
+                onSave={(v) => { setFields((p) => ({ ...p, [key]: v })); setEditing(null); }}
+                onCancel={() => setEditing(null)}
+              />
             ))}
           </div>
-        </div>
+        </Section>
 
-        {/* PDF button */}
-        <motion.button
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          onClick={handleGeneratePdf}
-          whileHover={pdfState === 'idle' ? { scale: 1.02, y: -2 } : undefined}
-          whileTap={pdfState === 'idle' ? { scale: 0.98 } : undefined}
-          className="btn-primary mt-2 flex h-14 w-full items-center justify-center gap-3"
-          disabled={pdfState !== 'idle'}
+        {/* ── Métricas técnicas ── */}
+        <Section title="Métricas técnicas" icon={<Beaker size={14} />} delay={0.18}>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'OG',  value: productionData.og.toFixed(3),  unit: '' },
+              { label: 'FG',  value: productionData.fg.toFixed(3),  unit: '' },
+              { label: 'ABV', value: `${productionData.abv}%`,      unit: '' },
+              { label: 'IBU', value: String(productionData.ibu),    unit: '' },
+              { label: 'EBC', value: String(productionData.ebc),    unit: '' },
+              { label: 'CO₂', value: `${productionData.carbonation}`, unit: 'vol' },
+            ].map((m) => (
+              <div
+                key={m.label}
+                className="rounded-xl p-3 text-center"
+                style={{ background: 'rgba(0,135,255,0.06)', border: '1px solid rgba(0,135,255,0.12)' }}
+              >
+                <p className="font-mono text-[9px] uppercase tracking-wider text-ink-500">{m.label}</p>
+                <p className="mt-1 font-display text-lg font-bold text-white">{m.value}</p>
+                {m.unit && <p className="font-mono text-[9px] text-ink-600">{m.unit}</p>}
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* ── Maltas ── */}
+        <Section title="Maltas" icon={<Leaf size={14} />} delay={0.22}
+          action={<AddButton onClick={addMalta} />}
         >
-          <AnimatePresence mode="wait">
-            {pdfState === 'idle' && (
-              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                <FileText size={20} />
-                <span>Generar PDF</span>
-              </motion.div>
-            )}
-            {pdfState === 'generating' && (
-              <motion.div key="gen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}>
-                  <Clock size={20} />
-                </motion.div>
-                <span>Generando documento...</span>
-              </motion.div>
-            )}
-            {pdfState === 'done' && (
-              <motion.div key="done" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                <CheckCircle2 size={20} />
-                <span>PDF generado con éxito</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
+          <div className="space-y-2">
+            {maltas.map((m) => (
+              <IngredientRow
+                key={m.id}
+                col1={m.name}
+                col2={m.amount}
+                col3={`EBC ${m.ebc}`}
+                badge={m.supplier}
+                accent="cyan"
+              />
+            ))}
+          </div>
+        </Section>
 
-        <div className="h-4" />
-      </div>
-    </div>
-  );
-}
+        {/* ── Lúpulos ── */}
+        <Section title="Lúpulos" icon={<FlaskConical size={14} />} delay={0.26}
+          action={<AddButton onClick={addLupulo} />}
+        >
+          <div className="space-y-2">
+            {lupulos.map((l) => (
+              <IngredientRow
+                key={l.id}
+                col1={l.name}
+                col2={l.amount}
+                col3={l.alpha}
+                badge={l.addition}
+                accent="amber"
+              />
+            ))}
+          </div>
+        </Section>
 
-// ---- Sub-components ----
-
-function SectionTitle({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 pt-1">
-      {icon}
-      <h2 className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-500">{children}</h2>
-      <div className="h-px flex-1 bg-ink-800" />
-    </div>
-  );
-}
-
-interface EditableFieldProps {
-  icon: React.ReactNode;
-  label: string;
-  field: string;
-  value: string;
-  unit?: string;
-  editing: boolean;
-  onEdit: () => void;
-  onClose: () => void;
-  onChange: (v: string) => void;
-  accent?: 'amber' | 'cyan' | 'electric';
-}
-
-function EditableField({ icon, label, value, unit, editing, onEdit, onClose, onChange, accent }: Omit<EditableFieldProps, 'field'> & { field: string }) {
-  const accentColor = accent === 'amber' ? '#ffb800' : accent === 'electric' ? '#0087ff' : '#00e1ff';
-  const accentBg = accent === 'amber' ? 'rgba(255,184,0,0.06)' : accent === 'electric' ? 'rgba(0,135,255,0.06)' : 'rgba(0,225,255,0.05)';
-  const accentBorder = accent === 'amber' ? 'rgba(255,184,0,0.2)' : accent === 'electric' ? 'rgba(0,135,255,0.2)' : 'rgba(0,225,255,0.15)';
-
-  return (
-    <div
-      className="hud relative rounded-xl p-3.5"
-      style={{ background: accentBg, border: `1px solid ${accentBorder}` }}
-    >
-      <div className="flex items-center gap-1.5 mb-2">
-        <span style={{ color: accentColor }}>{icon}</span>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-ink-500">{label}</span>
-        {!editing && (
-          <button onClick={onEdit} className="ml-auto text-ink-700 hover:text-cyan-400 transition-colors">
-            <Pencil size={11} />
-          </button>
-        )}
-        {editing && (
-          <button onClick={onClose} className="ml-auto text-ink-600 hover:text-red-400 transition-colors">
-            <X size={11} />
-          </button>
-        )}
-      </div>
-      <AnimatePresence mode="wait">
-        {editing ? (
-          <motion.input
-            key="input"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            autoFocus
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onClose()}
-            className="w-full bg-transparent font-display text-xl font-bold focus:outline-none"
-            style={{ color: accentColor }}
-          />
-        ) : (
-          <motion.p
-            key="display"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="font-display text-xl font-bold"
-            style={{ color: accentColor, textShadow: `0 0 10px ${accentColor}50` }}
+        {/* ── Levadura ── */}
+        <Section title="Levadura" icon={<Droplets size={14} />} delay={0.30}>
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.1)' }}
           >
-            {value}{unit && <span className="text-sm ml-1 font-mono font-normal text-ink-500">{unit}</span>}
-          </motion.p>
-        )}
-      </AnimatePresence>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-display text-base font-bold text-white">{productionData.levadura.name}</p>
+                <p className="font-mono text-xs text-ink-500">{productionData.levadura.lab} · {productionData.levadura.format}</p>
+              </div>
+              <span
+                className="rounded-lg px-2 py-1 font-mono text-[10px]"
+                style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399' }}
+              >
+                {productionData.levadura.attenuation}
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-wider text-ink-600">Pitching</p>
+                <p className="mt-0.5 font-mono text-xs text-ink-300">{productionData.levadura.pitch}</p>
+              </div>
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-wider text-ink-600">Temp. rango</p>
+                <p className="mt-0.5 font-mono text-xs text-ink-300">{productionData.levadura.tempRange}</p>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* ── Observaciones ── */}
+        <Section title="Observaciones" icon={<Pencil size={14} />} delay={0.34}>
+          {editing === 'observations' ? (
+            <div className="space-y-2">
+              <textarea
+                value={fields.observations}
+                onChange={(e) => setFields((p) => ({ ...p, observations: e.target.value }))}
+                className="field-edit min-h-[80px] w-full resize-none rounded-xl p-3 text-sm"
+                style={{
+                  background: 'rgba(13,24,36,0.7)',
+                  border: '1px solid rgba(0,225,255,0.3)',
+                  color: '#e8f0f8',
+                  outline: 'none',
+                }}
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button onClick={() => setEditing(null)} className="flex-1 rounded-xl py-2 font-mono text-xs" style={{ background: 'rgba(0,225,255,0.1)', border: '1px solid rgba(0,225,255,0.2)', color: '#00e1ff' }}>
+                  Guardar
+                </button>
+                <button onClick={() => setEditing(null)} className="flex-1 rounded-xl py-2 font-mono text-xs" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(74,96,112,0.8)' }}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditing('observations')}
+              className="w-full rounded-xl p-3 text-left text-sm transition-all duration-200"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <p className="font-sans text-sm leading-relaxed text-ink-300">{fields.observations}</p>
+              <div className="mt-2 flex items-center gap-1.5">
+                <Pencil size={10} style={{ color: 'rgba(0,225,255,0.5)' }} />
+                <span className="font-mono text-[9px] text-ink-600">Toca para editar</span>
+              </div>
+            </button>
+          )}
+        </Section>
+
+        {/* ── PDF button ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="pt-2 pb-4"
+        >
+          <button
+            onClick={handleGeneratePdf}
+            disabled={pdfState !== 'idle'}
+            className="relative w-full overflow-hidden rounded-2xl py-4 font-display text-sm font-bold uppercase tracking-widest transition-all duration-300"
+            style={{
+              background: pdfState === 'done'
+                ? 'rgba(52,211,153,0.12)'
+                : 'rgba(0,225,255,0.08)',
+              border: pdfState === 'done'
+                ? '1px solid rgba(52,211,153,0.35)'
+                : '1px solid rgba(0,225,255,0.2)',
+              color: pdfState === 'done' ? '#34d399' : '#00e1ff',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {pdfState === 'idle' && (
+                <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center gap-2">
+                  <FileText size={15} /> Generar PDF
+                </motion.span>
+              )}
+              {pdfState === 'preparing' && (
+                <motion.span key="prep" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center gap-2">
+                  <Loader2 size={15} className="animate-spin" /> Preparando documento...
+                </motion.span>
+              )}
+              {pdfState === 'generating' && (
+                <motion.span key="gen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center gap-2">
+                  <Loader2 size={15} className="animate-spin" /> Generando PDF...
+                </motion.span>
+              )}
+              {pdfState === 'done' && (
+                <motion.span key="done" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center gap-2">
+                  <CheckCircle2 size={15} /> PDF listo
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </motion.div>
+      </div>
     </div>
   );
 }
 
-function SpecCell({ label, value }: { label: string; value: string }) {
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+function Section({
+  title, icon, children, delay, action,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  delay: number;
+  action?: React.ReactNode;
+}) {
   return (
-    <div
-      className="rounded-xl px-3 py-2"
-      style={{ background: 'rgba(0,0,0,0.2)' }}
+    <GlassCard className="p-4" corners delay={delay}>
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span style={{ color: '#00e1ff' }}>{icon}</span>
+          <span className="font-display text-sm font-bold text-white">{title}</span>
+        </div>
+        {action}
+      </div>
+      {children}
+    </GlassCard>
+  );
+}
+
+function AddButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors"
+      style={{
+        background: 'rgba(0,225,255,0.06)',
+        border: '1px solid rgba(0,225,255,0.18)',
+        color: '#00e1ff',
+      }}
     >
-      <p className="font-mono text-[9px] uppercase tracking-wider text-ink-600">{label}</p>
-      <p className="mt-0.5 font-mono text-sm font-semibold text-white">{value}</p>
-    </div>
+      <Plus size={11} /> Añadir
+    </button>
   );
 }
 
 function IngredientRow({
-  name,
-  meta,
-  badge,
-  tag,
-  last,
+  col1, col2, col3, badge, accent,
 }: {
-  name: string;
-  meta: string;
+  col1: string;
+  col2: string;
+  col3: string;
   badge: string;
-  tag: string;
-  last: boolean;
+  accent: 'cyan' | 'amber';
 }) {
+  const c = accent === 'cyan'
+    ? { border: 'rgba(0,225,255,0.1)', bg: 'rgba(0,225,255,0.04)', badge: 'rgba(0,225,255,0.08)', badgeBorder: 'rgba(0,225,255,0.18)', badgeColor: '#00e1ff' }
+    : { border: 'rgba(255,170,0,0.1)', bg: 'rgba(255,170,0,0.04)', badge: 'rgba(255,170,0,0.08)', badgeBorder: 'rgba(255,170,0,0.2)', badgeColor: '#FFAA00' };
+
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 ${!last ? 'border-b' : ''}`}
-      style={{
-        background: 'rgba(255,255,255,0.015)',
-        borderBottomColor: 'rgba(255,255,255,0.04)',
-      }}
+      className="flex items-center gap-3 rounded-xl px-3 py-3"
+      style={{ background: c.bg, border: `1px solid ${c.border}` }}
     >
-      <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-medium text-white">{name}</p>
-        <p className="font-mono text-[11px] text-ink-500">{meta}</p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-sans text-sm font-medium text-white">{col1}</p>
+        <p className="font-mono text-[10px] text-ink-500">{col2} · {col3}</p>
       </div>
       <span
-        className="shrink-0 rounded-md px-2 py-0.5 font-mono text-[10px]"
-        style={{ background: 'rgba(0,225,255,0.07)', color: 'rgba(0,225,255,0.7)', border: '1px solid rgba(0,225,255,0.12)' }}
+        className="shrink-0 rounded-lg px-2 py-0.5 font-mono text-[10px]"
+        style={{ background: c.badge, border: `1px solid ${c.badgeBorder}`, color: c.badgeColor }}
       >
         {badge}
       </span>
-      <span
-        className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold"
-        style={{ background: 'rgba(255,255,255,0.04)', color: '#5e6673' }}
-      >
-        {tag}
-      </span>
     </div>
+  );
+}
+
+function EditableField({
+  fieldKey, label, icon, value, isEditing, onEdit, onSave, onCancel,
+}: {
+  fieldKey: string;
+  label: string;
+  icon: React.ReactNode;
+  value: string;
+  isEditing: boolean;
+  onEdit: () => void;
+  onSave: (v: string) => void;
+  onCancel: () => void;
+}) {
+  const [draft, setDraft] = useState(value);
+
+  if (isEditing) {
+    return (
+      <div className="col-span-2 flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="flex-1 rounded-xl px-3 py-2 font-mono text-sm"
+          style={{
+            background: 'rgba(13,24,36,0.8)',
+            border: '1px solid rgba(0,225,255,0.35)',
+            color: '#e8f0f8',
+            outline: 'none',
+          }}
+          autoFocus
+          onKeyDown={(e) => { if (e.key === 'Enter') onSave(draft); if (e.key === 'Escape') onCancel(); }}
+        />
+        <button onClick={() => onSave(draft)} className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(0,225,255,0.1)', border: '1px solid rgba(0,225,255,0.2)' }}>
+          <Check size={14} style={{ color: '#00e1ff' }} />
+        </button>
+        <button onClick={onCancel} className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <X size={14} style={{ color: 'rgba(74,96,112,0.7)' }} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={onEdit}
+      className="group rounded-xl p-3 text-left transition-all duration-200"
+      style={{
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.06)',
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,225,255,0.2)'; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; }}
+    >
+      <div className="mb-1 flex items-center gap-1.5">
+        <span style={{ color: 'rgba(0,225,255,0.5)' }}>{icon}</span>
+        <span className="font-mono text-[9px] uppercase tracking-wider text-ink-600">{label}</span>
+      </div>
+      <p className="font-display text-sm font-semibold text-white">{value}</p>
+    </button>
   );
 }

@@ -3,16 +3,19 @@ export type Screen = 'home' | 'production' | 'documents' | 'assistant';
 export const USER_NAME = 'Juanfran';
 
 export const bootSequence = [
-  { label: 'Producción', delay: 500 },
-  { label: 'Biblioteca', delay: 480 },
-  { label: 'Memoria', delay: 460 },
-  { label: 'Voz', delay: 500 },
-  { label: 'IA', delay: 520 },
+  { label: 'AI CORE',           icon: '◈', delay: 480, color: '#FFAA00' },
+  { label: 'VOICE ENGINE',      icon: '◉', delay: 460, color: '#00e1ff' },
+  { label: 'DOCUMENT VAULT',    icon: '▣', delay: 500, color: '#0087ff' },
+  { label: 'PRODUCTION MODULE', icon: '⬡', delay: 520, color: '#00e1ff' },
+  { label: 'MEMORY',            icon: '◎', delay: 440, color: '#34d399' },
+  { label: 'LOCAL MODE',        icon: '⬢', delay: 480, color: '#FFAA00' },
 ];
+
+export type SystemMode = 'LIVE' | 'BUNKER';
 
 export const systemStatus = {
   state: 'Operativo',
-  uptime: '14d 06:42:18',
+  uptime: '14d 06:42',
   activeBatch: 'Golden Ale 26-017',
   temperature: 64.5,
   targetTemp: 66.0,
@@ -21,6 +24,10 @@ export const systemStatus = {
   memory: 62,
   network: 'Conectado',
   alerts: 0,
+  docsIndexed: 6,
+  aiStatus: 'Activo',
+  aiModel: 'JAR-1.0',
+  mode: 'LIVE' as SystemMode,
 };
 
 export type RecipeStage =
@@ -31,14 +38,6 @@ export type RecipeStage =
   | 'Fermentación'
   | 'Maduración'
   | 'Envasado';
-
-export interface ProductionField {
-  key: string;
-  label: string;
-  value: string;
-  unit?: string;
-  editable: boolean;
-}
 
 export const productionData = {
   batch: '26-017',
@@ -62,15 +61,16 @@ export const productionData = {
   ibu: 28,
   ebc: 8,
   abv: 5.2,
-  observations: 'Fermentación activa. Sin anomalías. Aroma a frutas tropicales notable en burbujeo.',
+  observations:
+    'Fermentación activa. Sin anomalías. Aroma a frutas tropicales notable en burbujeo.',
   maltas: [
-    { name: 'Malta Pilsner', amount: '90 kg', ebc: 3, supplier: 'Weyermann' },
-    { name: 'Malta Caramelo', amount: '15 kg', ebc: 60, supplier: 'Weyermann' },
-    { name: 'Copos de avena', amount: '10 kg', ebc: 2, supplier: 'Simpsons' },
+    { name: 'Malta Pilsner',   amount: '90 kg',  ebc: 3,  supplier: 'Weyermann' },
+    { name: 'Malta Caramelo',  amount: '15 kg',  ebc: 60, supplier: 'Weyermann' },
+    { name: 'Copos de avena',  amount: '10 kg',  ebc: 2,  supplier: 'Simpsons' },
   ],
   lupulos: [
-    { name: 'Cascade', alpha: '6.8%', amount: '500 g', addition: '60 min' },
-    { name: 'Cascade', alpha: '6.8%', amount: '300 g', addition: '15 min' },
+    { name: 'Cascade',    alpha: '6.8%',  amount: '500 g', addition: '60 min' },
+    { name: 'Cascade',    alpha: '6.8%',  amount: '300 g', addition: '15 min' },
     { name: 'Centennial', alpha: '10.2%', amount: '200 g', addition: 'Whirlpool' },
   ],
   levadura: {
@@ -82,13 +82,13 @@ export const productionData = {
     tempRange: '14 – 21 °C',
   },
   timeline: [
-    { stage: 'Maceración', done: true, temp: 67, duration: '60 min' },
-    { stage: 'Filtrado', done: true, temp: 78, duration: '15 min' },
-    { stage: 'Ebullición', done: true, temp: 100, duration: '60 min' },
-    { stage: 'Whirlpool', done: true, temp: 85, duration: '10 min' },
-    { stage: 'Fermentación', done: false, temp: 64.5, duration: '7 días' },
-    { stage: 'Maduración', done: false, temp: 0, duration: '14 días' },
-    { stage: 'Envasado', done: false, temp: 0, duration: '2 h' },
+    { stage: 'Maceración',  done: true,  temp: 67,   duration: '60 min' },
+    { stage: 'Filtrado',    done: true,  temp: 78,   duration: '15 min' },
+    { stage: 'Ebullición',  done: true,  temp: 100,  duration: '60 min' },
+    { stage: 'Whirlpool',   done: true,  temp: 85,   duration: '10 min' },
+    { stage: 'Fermentación',done: false, temp: 64.5, duration: '7 días' },
+    { stage: 'Maduración',  done: false, temp: 0,    duration: '14 días' },
+    { stage: 'Envasado',    done: false, temp: 0,    duration: '2 h' },
   ],
 };
 
@@ -114,7 +114,8 @@ export const documents: DocItem[] = [
     date: '2026-07-01',
     pages: 4,
     size: '840 KB',
-    excerpt: 'Ficha técnica completa de la receta base. Perfil sensorial, maltas, lúpulos y curva de temperaturas.',
+    excerpt:
+      'Ficha técnica completa de la receta base. Perfil sensorial, maltas, lúpulos y curva de temperaturas.',
   },
   {
     id: 'doc-2',
@@ -124,7 +125,8 @@ export const documents: DocItem[] = [
     date: '2026-06-22',
     pages: 2,
     size: '320 KB',
-    excerpt: 'Certificado de análisis del lote de lúpulo Cascade. Alfa-ácidos 6.8%, aceites esenciales y trazabilidad.',
+    excerpt:
+      'Certificado de análisis del lote de lúpulo Cascade. Alfa-ácidos 6.8%, aceites y trazabilidad.',
   },
   {
     id: 'doc-3',
@@ -134,7 +136,8 @@ export const documents: DocItem[] = [
     date: '2026-06-15',
     pages: 3,
     size: '620 KB',
-    excerpt: 'Especificación técnica de malta base Pilsner. Color EBC, humedad, extracto y poder diastásico.',
+    excerpt:
+      'Especificación técnica de malta base Pilsner. Color EBC, humedad, extracto y poder diastásico.',
   },
   {
     id: 'doc-4',
@@ -144,7 +147,8 @@ export const documents: DocItem[] = [
     date: '2026-06-10',
     pages: 2,
     size: '290 KB',
-    excerpt: 'Hoja técnica de la cepa Nottingham. Rango de fermentación, atenuación y recomendaciones de inoculación.',
+    excerpt:
+      'Hoja técnica de la cepa Nottingham. Rango de fermentación, atenuación y recomendaciones.',
   },
   {
     id: 'doc-5',
@@ -154,7 +158,8 @@ export const documents: DocItem[] = [
     date: '2026-07-09',
     pages: 12,
     size: '1.8 MB',
-    excerpt: 'Registro completo de lotes producidos en temporada 2026. Métricas, desviaciones y notas de cata.',
+    excerpt:
+      'Registro completo de lotes 2026. Métricas, desviaciones y notas de cata.',
   },
   {
     id: 'doc-6',
@@ -164,7 +169,7 @@ export const documents: DocItem[] = [
     date: '2026-07-05',
     pages: 1,
     size: '180 KB',
-    excerpt: 'Factura de insumos malteros julio 2026. Malta Pilsner 90 kg, Malta Caramelo 15 kg.',
+    excerpt: 'Factura de insumos malteros julio 2026. Malta Pilsner 90 kg, Caramelo 15 kg.',
   },
 ];
 
@@ -180,7 +185,8 @@ export const initialChat: ChatMessage[] = [
   {
     id: 'm1',
     role: 'assistant',
-    content: `Sistema en línea. Soy J.A.R.B.E.E.R., tu asistente inteligente de producción. Puedo abrir lotes, consultar recetas, registrar métricas y guiarte en cada etapa del proceso. ¿Cómo puedo ayudarte hoy?`,
+    content:
+      'Sistema en línea. Soy J.A.R.B.E.E.R., tu asistente inteligente de producción. Puedo abrir lotes, consultar recetas, registrar métricas y guiarte en cada etapa del proceso. ¿Cómo puedo ayudarte hoy?',
     timestamp: '09:41',
   },
 ];
@@ -195,9 +201,10 @@ export interface VoiceCommand {
 
 export const voiceCommands: VoiceCommand[] = [
   {
-    triggers: ['golden', 'abre la golden', 'jarbeer abre', 'abre producción', 'producción'],
+    triggers: ['golden', 'abre la golden', 'abre producción', 'producción', 'lote'],
     userText: 'JarBeer, abre la Golden.',
-    response: 'Abriendo ficha de producción. Lote 26-017 — Golden Ale — activo y en fermentación al 68%.',
+    response:
+      'Abriendo ficha de producción. Lote 26-017 — Golden Ale — activo y en fermentación al 68%.',
     action: 'navigate',
     target: 'production',
   },
@@ -212,9 +219,23 @@ export const voiceCommands: VoiceCommand[] = [
     response: 'Temperatura actual: 64.5 °C. Objetivo: 66.0 °C. Todo dentro de rango operativo.',
   },
   {
-    triggers: ['documentos', 'receta', 'biblioteca'],
+    triggers: ['documentos', 'biblioteca', 'archivos'],
     userText: 'Muéstrame los documentos.',
     response: 'Abriendo biblioteca documental. 6 documentos disponibles.',
+    action: 'navigate',
+    target: 'documents',
+  },
+  {
+    triggers: ['cascade', 'buscar cascade', 'lúpulo'],
+    userText: 'Buscar Cascade.',
+    response: 'Localizando COA Cascade 2026. Referencia COA-CSC-2026. Abriendo biblioteca.',
+    action: 'navigate',
+    target: 'documents',
+  },
+  {
+    triggers: ['ipa', 'receta ipa', 'abrir receta'],
+    userText: 'Abrir receta IPA.',
+    response: 'Buscando receta IPA en la biblioteca. Mostrando documentos disponibles.',
     action: 'navigate',
     target: 'documents',
   },
@@ -232,21 +253,21 @@ export const quickActions: {
   {
     id: 'production',
     label: 'Producción',
-    description: 'Golden Ale 26-017',
+    description: 'Golden Ale 26-017 · Fermentación',
     icon: 'FlaskConical',
     value: '68%',
   },
   {
     id: 'documents',
     label: 'Documentos',
-    description: '6 archivos disponibles',
+    description: '6 archivos indexados',
     icon: 'Library',
     value: '6',
   },
   {
     id: 'assistant',
     label: 'Asistente IA',
-    description: 'Comando de voz',
+    description: 'Comando de voz activo',
     icon: 'MessageSquare',
     value: 'ON',
   },
