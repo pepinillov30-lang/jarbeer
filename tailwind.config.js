@@ -19,38 +19,15 @@ export default {
           400: '#6a8090',
           300: '#90a8b8',
         },
-        electric: {
-          400: '#00e1ff',
-          500: '#00b8d4',
-          600: '#0087ff',
-        },
-        amber: {
-          DEFAULT: '#FFAA00',
-          dark: '#cc8800',
-        },
-        orange: {
-          DEFAULT: '#FA6A00',
-          dark: '#c55200',
-        },
       },
       keyframes: {
         'live-pulse': {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.4', transform: 'scale(0.85)' },
         },
-        'scan': {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100%)' },
-        },
-        'breathe': {
-          '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
-          '50%': { opacity: '1', transform: 'scale(1.04)' },
-        },
       },
       animation: {
         'live-pulse': 'live-pulse 2s ease-in-out infinite',
-        'scan': 'scan 3s linear infinite',
-        'breathe': 'breathe 4s ease-in-out infinite',
       },
     },
   },

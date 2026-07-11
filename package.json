@@ -2,6 +2,7 @@
   "name": "jarbeer-os",
   "version": "1.0.0-beta",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

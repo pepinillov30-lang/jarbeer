@@ -7,264 +7,273 @@ interface AvatarProps {
   responding?: boolean;
 }
 
-export function Avatar({ size = 260, active = false, responding = false }: AvatarProps) {
+export function Avatar({ size = 280, active = false, responding = false }: AvatarProps) {
   const id = useId().replace(/:/g, '');
   const cx = size / 2;
   const cy = size / 2;
+  const coreR = size * 0.33;   // radius of the image circle
+  const r1 = size * 0.44;      // inner orbit ring
+  const r2 = size * 0.50;      // outer orbit ring
 
-  const coreRadius = size * 0.32;
-  const r1 = size * 0.45;
-  const r2 = size * 0.38;
-  const r3 = size * 0.52;
-
-  const baseHue = responding ? '#FFAA00' : active ? '#00e1ff' : '#0087ff';
-  const glowRgb = responding ? '255,170,0' : active ? '0,225,255' : '0,135,255';
-  const glowIntensity = responding ? 0.8 : active ? 0.65 : 0.35;
-  const breathDuration = responding ? 1.2 : active ? 2.0 : 5.5;
+  const glowRgb   = responding ? '255,170,0' : active ? '0,225,255' : '0,135,255';
+  const baseColor = responding ? '#FFAA00'   : active ? '#00e1ff'   : '#0087ff';
+  const breathDur = responding ? 1.1 : active ? 1.8 : 5.0;
+  const glowAlpha = responding ? 0.9 : active ? 0.7 : 0.35;
 
   return (
-    <div
-      className="relative select-none"
-      style={{ width: size, height: size }}
-      aria-hidden
-    >
-      {/* ── Outer ambient halo ── */}
+    <div className="relative select-none" style={{ width: size, height: size }} aria-hidden>
+
+      {/* ── Outer ambient halo (blur div) ── */}
       <motion.div
-        className="absolute inset-0 rounded-full"
+        className="pointer-events-none absolute inset-0 rounded-full"
         style={{
-          background: `radial-gradient(circle, rgba(${glowRgb},${glowIntensity * 0.25}) 0%, rgba(${glowRgb},0.05) 50%, transparent 75%)`,
-          filter: `blur(${size * 0.12}px)`,
+          background: `radial-gradient(circle, rgba(${glowRgb},${glowAlpha * 0.3}) 0%, rgba(${glowRgb},0.04) 55%, transparent 75%)`,
+          filter: `blur(${size * 0.14}px)`,
+          transition: 'background 0.6s',
         }}
-        animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: breathDuration, repeat: Infinity, ease: 'easeInOut' }}
+        animate={{ scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: breathDur, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      {/* ── SVG: rings, equator, particles ── */}
       <svg
         viewBox={`0 0 ${size} ${size}`}
-        className="absolute inset-0"
+        width={size}
+        height={size}
+        className="relative z-10"
         style={{ overflow: 'visible' }}
       >
         <defs>
-          {/* Core radial gradient */}
-          <radialGradient id={`${id}-core`} cx="50%" cy="50%">
-            <stop offset="0%"   stopColor={baseHue} stopOpacity="0.18" />
-            <stop offset="60%"  stopColor={baseHue} stopOpacity="0.06" />
-            <stop offset="100%" stopColor="transparent" />
-          </radialGradient>
-
-          {/* Image clip */}
+          {/* Image mask — circular crop */}
           <clipPath id={`${id}-clip`}>
-            <circle cx={cx} cy={cy} r={coreRadius} />
+            <circle cx={cx} cy={cy} r={coreR} />
           </clipPath>
 
-          {/* Glow filter */}
-          <filter id={`${id}-glow`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          {/* Glow filter for rings */}
+          <filter id={`${id}-glow`} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
 
-          {/* Subtle inner border gradient */}
-          <radialGradient id={`${id}-border`} cx="50%" cy="50%">
-            <stop offset="80%"  stopColor="transparent" />
-            <stop offset="100%" stopColor={`rgba(${glowRgb},0.6)`} />
+          {/* Vignette gradient over image edge */}
+          <radialGradient id={`${id}-vignette`} cx="50%" cy="50%">
+            <stop offset="70%" stopColor="transparent" />
+            <stop offset="100%" stopColor="rgba(2,4,8,0.55)" />
           </radialGradient>
+
+          {/* Scan line gradient */}
+          <linearGradient id={`${id}-scan`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stopColor="transparent" />
+            <stop offset="40%"  stopColor={`rgba(${glowRgb},0.55)`} />
+            <stop offset="60%"  stopColor={`rgba(${glowRgb},0.55)`} />
+            <stop offset="100%" stopColor="transparent" />
+          </linearGradient>
         </defs>
 
-        {/* Background corona */}
+        {/* ── Outermost faint ring ── */}
         <motion.circle
-          cx={cx} cy={cy} r={coreRadius + 4}
-          fill={`url(#${id}-core)`}
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: breathDuration, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: `${cx}px ${cy}px` }}
-        />
-
-        {/* Ring 3 — outermost, very slow */}
-        <motion.circle
-          cx={cx} cy={cy} r={r3}
+          cx={cx} cy={cy} r={r2 + size * 0.04}
           fill="none"
-          stroke={`rgba(${glowRgb},0.1)`}
+          stroke={`rgba(${glowRgb},0.08)`}
           strokeWidth="1"
-          strokeDasharray="6 14"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+          strokeDasharray="4 16"
           style={{ transformOrigin: `${cx}px ${cy}px` }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
         />
 
-        {/* Ring 1 — mid outer, slow */}
+        {/* ── Outer orbit ring + dot ── */}
+        <motion.circle
+          cx={cx} cy={cy} r={r2}
+          fill="none"
+          stroke={`rgba(${glowRgb},0.18)`}
+          strokeWidth="1.2"
+          strokeDasharray="6 12"
+          filter={`url(#${id}-glow)`}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+        />
+        <motion.circle
+          cx={cx} cy={cy - r2} r={4.5}
+          fill={baseColor}
+          style={{ transformOrigin: `${cx}px ${cy}px`, filter: `drop-shadow(0 0 8px ${baseColor})` }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+        />
+
+        {/* ── Inner orbit ring + counter dot ── */}
         <motion.circle
           cx={cx} cy={cy} r={r1}
           fill="none"
           stroke={`rgba(${glowRgb},0.22)`}
-          strokeWidth="1.2"
-          strokeDasharray="5 10"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
-          style={{ transformOrigin: `${cx}px ${cy}px` }}
-        />
-        {/* Ring 1 orbiting dot */}
-        <motion.circle
-          cx={cx} cy={cy - r1} r={4}
-          fill={baseHue}
-          style={{ filter: `drop-shadow(0 0 8px ${baseHue})`, transformOrigin: `${cx}px ${cy}px` }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
-        />
-
-        {/* Ring 2 — reverse, mid */}
-        <motion.circle
-          cx={cx} cy={cy} r={r2}
-          fill="none"
-          stroke={`rgba(${glowRgb},0.15)`}
           strokeWidth="1"
           strokeDasharray="3 8"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
-          style={{ transformOrigin: `${cx}px ${cy}px` }}
-        />
-        {/* Ring 2 orbiting dot */}
-        <motion.circle
-          cx={cx} cy={cy + r2} r={3}
-          fill={`rgba(${glowRgb},0.85)`}
           style={{ transformOrigin: `${cx}px ${cy}px` }}
           animate={{ rotate: -360 }}
-          transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
-        />
-
-        {/* Equator belt */}
-        <motion.ellipse
-          cx={cx} cy={cy} rx={coreRadius} ry={coreRadius * 0.22}
-          fill="none"
-          stroke={`rgba(${glowRgb},0.2)`}
-          strokeWidth="1"
-          strokeDasharray="4 6"
-          animate={{ rotate: 360 }}
           transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+        />
+        <motion.circle
+          cx={cx} cy={cy + r1} r={3}
+          fill={`rgba(${glowRgb},0.8)`}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
+          animate={{ rotate: -360 }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+        />
+
+        {/* ── Equator belt ── */}
+        <motion.ellipse
+          cx={cx} cy={cy} rx={coreR} ry={coreR * 0.2}
+          fill="none"
+          stroke={`rgba(${glowRgb},0.18)`}
+          strokeWidth="1"
+          strokeDasharray="5 7"
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+        />
+
+        {/* ── Glow corona behind image ── */}
+        <motion.circle
+          cx={cx} cy={cy} r={coreR + 6}
+          fill={`rgba(${glowRgb},${glowAlpha * 0.12})`}
+          animate={{ scale: [1, 1.06, 1], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: breathDur, repeat: Infinity, ease: 'easeInOut' }}
           style={{ transformOrigin: `${cx}px ${cy}px` }}
         />
 
-        {/* Core face image */}
+        {/* ── AVATAR IMAGE — clipped to circle ── */}
         <motion.image
           href="/avatar.png"
-          x={cx - coreRadius}
-          y={cy - coreRadius}
-          width={coreRadius * 2}
-          height={coreRadius * 2}
+          x={cx - coreR}
+          y={cy - coreR}
+          width={coreR * 2}
+          height={coreR * 2}
           clipPath={`url(#${id}-clip)`}
           preserveAspectRatio="xMidYMid slice"
-          animate={{ opacity: [0.88, 1, 0.88] }}
-          transition={{ duration: breathDuration, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ filter: `drop-shadow(0 0 12px rgba(${glowRgb},0.5))` }}
+          animate={{ opacity: [0.9, 1, 0.9] }}
+          transition={{ duration: breathDur, repeat: Infinity, ease: 'easeInOut' }}
         />
 
-        {/* Inner border glow ring */}
-        <motion.circle
-          cx={cx} cy={cy} r={coreRadius}
-          fill="none"
-          stroke={`rgba(${glowRgb},${responding ? 0.7 : active ? 0.55 : 0.3})`}
-          strokeWidth="1.5"
-          filter={`url(#${id}-glow)`}
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: breathDuration * 0.6, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Scan line inside core */}
-        <motion.line
-          x1={cx - coreRadius * 0.85} y1={cy}
-          x2={cx + coreRadius * 0.85} y2={cy}
-          stroke={`rgba(${glowRgb},0.45)`}
-          strokeWidth="0.8"
-          animate={{
-            y: [cy - coreRadius * 0.75, cy + coreRadius * 0.75, cy - coreRadius * 0.75],
-            opacity: [0, 0.8, 0],
-          }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        {/* Vignette overlay over image */}
+        <circle
+          cx={cx} cy={cy} r={coreR}
+          fill={`url(#${id}-vignette)`}
           clipPath={`url(#${id}-clip)`}
         />
 
-        {/* Data readout ticks around core */}
-        {[0, 60, 120, 180, 240, 300].map((deg, i) => {
+        {/* ── Glowing border ring over image ── */}
+        <motion.circle
+          cx={cx} cy={cy} r={coreR}
+          fill="none"
+          stroke={baseColor}
+          strokeWidth="2"
+          filter={`url(#${id}-glow)`}
+          animate={{ opacity: [0.4, glowAlpha, 0.4] }}
+          transition={{ duration: breathDur * 0.7, repeat: Infinity, ease: 'easeInOut' }}
+        />
+
+        {/* ── Scan line inside core ── */}
+        <motion.rect
+          x={cx - coreR * 0.85}
+          y={cy - 0.6}
+          width={coreR * 1.7}
+          height={1.2}
+          fill={`url(#${id}-scan)`}
+          clipPath={`url(#${id}-clip)`}
+          animate={{
+            y: [cy - coreR * 0.78, cy + coreR * 0.78, cy - coreR * 0.78],
+            opacity: [0, 0.8, 0],
+          }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+
+        {/* ── HUD data ticks (6 around core) ── */}
+        {[0,60,120,180,240,300].map((deg, i) => {
           const rad = (deg * Math.PI) / 180;
-          const x1 = cx + Math.cos(rad) * (coreRadius + 1);
-          const y1 = cy + Math.sin(rad) * (coreRadius + 1);
-          const x2 = cx + Math.cos(rad) * (coreRadius + 8);
-          const y2 = cy + Math.sin(rad) * (coreRadius + 8);
+          const x1 = cx + Math.cos(rad) * (coreR + 2);
+          const y1 = cy + Math.sin(rad) * (coreR + 2);
+          const x2 = cx + Math.cos(rad) * (coreR + 10);
+          const y2 = cy + Math.sin(rad) * (coreR + 10);
           return (
             <motion.line
-              key={i}
-              x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke={`rgba(${glowRgb},0.5)`}
-              strokeWidth="1.5"
-              animate={{ opacity: [0.2, 0.9, 0.2] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.3, ease: 'easeInOut' }}
+              key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke={baseColor} strokeWidth="1.5"
+              animate={{ opacity: [0.15, 0.9, 0.15] }}
+              transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.35, ease: 'easeInOut' }}
             />
+          );
+        })}
+
+        {/* ── Data readout labels ── */}
+        {[
+          { deg: 0,   val: '64.5°' },
+          { deg: 120, val: '68%'   },
+          { deg: 240, val: 'OK'    },
+        ].map(({ deg, val }) => {
+          const rad = (deg * Math.PI) / 180;
+          const tx = cx + Math.cos(rad) * (coreR + 20);
+          const ty = cy + Math.sin(rad) * (coreR + 20);
+          return (
+            <motion.text
+              key={deg} x={tx} y={ty}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize="8" fontFamily="JetBrains Mono, monospace"
+              fill={`rgba(${glowRgb},0.55)`}
+              animate={{ opacity: [0.2, 0.8, 0.2] }}
+              transition={{ duration: 3, repeat: Infinity, delay: deg / 120 * 0.5, ease: 'easeInOut' }}
+            >
+              {val}
+            </motion.text>
           );
         })}
       </svg>
 
-      {/* ── Floating particles ── */}
-      {[...Array(8)].map((_, i) => (
-        <AvatarParticle key={i} index={i} size={size} glowRgb={glowRgb} baseHue={baseHue} />
+      {/* ── Floating particles (outside SVG, CSS-driven) ── */}
+      {[...Array(10)].map((_, i) => (
+        <Particle key={i} index={i} size={size} baseColor={baseColor} glowRgb={glowRgb} />
       ))}
 
       {/* ── Active pulse rings ── */}
-      {(active || responding) &&
-        [0, 0.6, 1.2].map((delay) => (
-          <motion.div
-            key={delay}
-            className="absolute inset-0 rounded-full"
-            style={{
-              border: `1px solid rgba(${glowRgb},0.4)`,
-            }}
-            initial={{ scale: 1, opacity: 0.5 }}
-            animate={{ scale: 1.6, opacity: 0 }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut', delay }}
-          />
-        ))}
+      {(active || responding) && [0, 0.5, 1.1].map((delay) => (
+        <motion.div
+          key={delay}
+          className="pointer-events-none absolute inset-0 rounded-full"
+          style={{ border: `1px solid rgba(${glowRgb},0.35)` }}
+          initial={{ scale: 1, opacity: 0.5 }}
+          animate={{ scale: 1.65, opacity: 0 }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut', delay }}
+        />
+      ))}
     </div>
   );
 }
 
-function AvatarParticle({
-  index,
-  size,
-  glowRgb,
-  baseHue,
-}: {
-  index: number;
-  size: number;
-  glowRgb: string;
-  baseHue: string;
+function Particle({ index, size, baseColor, glowRgb }: {
+  index: number; size: number; baseColor: string; glowRgb: string;
 }) {
-  const angle = (index / 8) * Math.PI * 2;
-  const orbitRadius = size * (0.38 + (index % 3) * 0.06);
-  const px = size / 2 + Math.cos(angle) * orbitRadius - 3;
-  const py = size / 2 + Math.sin(angle) * orbitRadius - 3;
-  const dur = 2.8 + index * 0.55;
-  const pSize = index % 2 === 0 ? 5 : 3;
+  const seed = index / 10;
+  const angle = seed * Math.PI * 2;
+  const orbit = size * (0.36 + (index % 4) * 0.055);
+  const px = size / 2 + Math.cos(angle) * orbit - 2.5;
+  const py = size / 2 + Math.sin(angle) * orbit - 2.5;
+  const dur = 2.5 + index * 0.6;
+  const ps = index % 3 === 0 ? 5 : index % 2 === 0 ? 3.5 : 2.5;
 
   return (
     <motion.div
-      className="absolute rounded-full"
+      className="pointer-events-none absolute rounded-full"
       style={{
-        left: px,
-        top: py,
-        width: pSize,
-        height: pSize,
-        background: baseHue,
-        boxShadow: `0 0 ${pSize * 2}px rgba(${glowRgb},0.9)`,
+        left: px, top: py, width: ps, height: ps,
+        background: baseColor,
+        boxShadow: `0 0 ${ps * 2.5}px rgba(${glowRgb},0.85)`,
       }}
       animate={{
-        opacity: [0.05, 0.95, 0.05],
-        scale: [0.4, 1.3, 0.4],
-        x: [0, Math.cos(angle + 1.2) * 10, 0],
-        y: [0, Math.sin(angle + 1.2) * 8, 0],
+        opacity: [0.04, 0.95, 0.04],
+        scale: [0.4, 1.4, 0.4],
+        x: [0, Math.cos(angle + 1.1) * 12, 0],
+        y: [0, Math.sin(angle + 1.1) * 9, 0],
       }}
-      transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut', delay: index * 0.35 }}
+      transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut', delay: index * 0.32 }}
     />
   );
 }
