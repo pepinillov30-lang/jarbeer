@@ -20,13 +20,13 @@ const PV = {
 const PT = { duration:0.37, ease:[0.22,1,0.36,1] as [number,number,number,number] };
 
 export default function App() {
-  const [booted, setBooted]   = useState(false);
-  const [screen, setScreen]   = useState<Screen>('home');
-  const [mic, setMic]         = useState<MicState>('idle');
-  const [msgs, setMsgs]       = useState<ChatMessage[]>(initialChat);
-  const [typing, setTyping]   = useState(false);
-  const [sound, setSound]     = useState(true);
-  const timers                = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [booted, setBooted] = useState(false);
+  const [screen, setScreen] = useState<Screen>('home');
+  const [mic, setMic]       = useState<MicState>('idle');
+  const [msgs, setMsgs]     = useState<ChatMessage[]>(initialChat);
+  const [typing, setTyping] = useState(false);
+  const [sound, setSound]   = useState(true);
+  const timers              = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current=[]; };
 
@@ -53,6 +53,7 @@ export default function App() {
       setTyping(false); setMic('idle');
       if(scenario.action==='navigate'&&scenario.target) setTimeout(()=>setScreen(scenario.target!),600);
     }, 5300));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mic, sound]);
 
   const handleSend = useCallback((text: string) => {

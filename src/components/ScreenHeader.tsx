@@ -13,9 +13,7 @@ export function ScreenHeader({ title, subtitle, right, onBack }: {
       {onBack && (
         <button onClick={onBack}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-          style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}
-          aria-label="Volver"
-        >
+          style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }} aria-label="Volver">
           <ChevronLeft size={18} style={{ color:'rgba(100,128,150,0.8)' }} />
         </button>
       )}

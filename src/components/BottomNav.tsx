@@ -23,8 +23,7 @@ export function BottomNav({ active, onNavigate, soundEnabled=false }: {
       }}
     >
       <div className="absolute top-0 left-1/4 right-1/4 h-px"
-        style={{ background:'linear-gradient(90deg,transparent,rgba(0,225,255,0.28),transparent)' }}
-      />
+        style={{ background:'linear-gradient(90deg,transparent,rgba(0,225,255,0.28),transparent)' }} />
       <div className="flex">
         {NAV.map(({ id, label, Icon }) => {
           const on = active === id;
@@ -38,17 +37,14 @@ export function BottomNav({ active, onNavigate, soundEnabled=false }: {
                 <motion.div layoutId="nav-bar"
                   className="absolute top-0 left-3 right-3 h-0.5 rounded-b-full"
                   style={{ background:'linear-gradient(90deg,transparent,#00e1ff,transparent)' }}
-                  transition={{ type:'spring', stiffness:380, damping:30 }}
-                />
+                  transition={{ type:'spring', stiffness:380, damping:30 }} />
               )}
               <motion.div animate={{ scale: on ? 1.12 : 1 }} transition={{ type:'spring', stiffness:400, damping:20 }}>
                 <Icon size={20} strokeWidth={on?2:1.5}
-                  style={{ color: on?'#00e1ff':'rgba(74,96,112,0.7)', filter: on?'drop-shadow(0 0 6px rgba(0,225,255,0.55))':'none', transition:'color 0.2s,filter 0.2s' }}
-                />
+                  style={{ color: on?'#00e1ff':'rgba(74,96,112,0.7)', filter: on?'drop-shadow(0 0 6px rgba(0,225,255,0.55))':'none', transition:'color 0.2s,filter 0.2s' }} />
               </motion.div>
               <span className="font-mono text-[9px] tracking-widest uppercase"
-                style={{ color: on?'#00e1ff':'rgba(74,96,112,0.7)', transition:'color 0.2s' }}
-              >{label}</span>
+                style={{ color: on?'#00e1ff':'rgba(74,96,112,0.7)', transition:'color 0.2s' }}>{label}</span>
             </button>
           );
         })}
