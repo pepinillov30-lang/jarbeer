@@ -24,7 +24,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(160deg, #020509 0%, #030c14 35%, #050e18 60%, #030810 80%, #020508 100%)',
+            'linear-gradient(160deg, #01060e 0%, #020e1f 35%, #030f1a 60%, #02090e 80%, #010509 100%)',
         }}
       />
 
@@ -34,7 +34,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
         viewBox="0 0 390 844"
         preserveAspectRatio="xMidYMid slice"
         initial={{ opacity: 0 }}
-        animate={{ opacity: phase === 'logo' ? 0.07 : 0.045 }}
+        animate={{ opacity: phase === 'logo' ? 0.55 : 0.38 }}
         transition={{ duration: 2.5, ease: 'easeInOut' }}
       >
         {/* ── STRUCTURAL ELEMENTS ── */}
@@ -43,7 +43,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
         <rect x="0" y="0" width="390" height="20" fill="rgba(0,100,180,0.04)" />
         {/* Ceiling beam grid */}
         {[0, 78, 156, 234, 312, 390].map((x, i) => (
-          <line key={i} x1={x} y1="0" x2={x} y2="844" stroke="#5a90b0" strokeWidth="0.5" strokeDasharray="2 18" opacity="0.4" />
+          <line key={i} x1={x} y1="0" x2={x} y2="844" stroke="#5a90b0" strokeWidth="0.5" strokeDasharray="2 18" opacity="0.7" />
         ))}
         {/* Floor */}
         <line x1="0" y1="720" x2="390" y2="720" stroke="#5a90b0" strokeWidth="2" />
@@ -54,7 +54,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
 
         {/* ── OVERHEAD PIPE MAINS ── */}
         <rect x="18" y="22" width="354" height="10" rx="5" fill="none" stroke="#5a90b0" strokeWidth="1.5" />
-        <rect x="22" y="24" width="346" height="6" rx="3" fill="rgba(0,160,220,0.05)" />
+        <rect x="22" y="22" width="346" height="6" rx="3" fill="rgba(0,160,220,0.18)" />
         {/* Drop legs */}
         {[52, 118, 195, 272, 338].map((x, i) => (
           <g key={i}>
@@ -76,11 +76,11 @@ function FactoryBg({ phase }: { phase: Phase }) {
         {/* Equatorial ring */}
         <ellipse cx="72" cy="160" rx="50" ry="9" fill="none" stroke="#5a90b0" strokeWidth="1.5" />
         {/* Liquid level highlight */}
-        <rect x="23" y="300" width="98" height="210" rx="0" fill="rgba(0,160,220,0.045)" clipPath="url(#fv1-clip)" />
+        <rect x="23" y="300" width="98" height="210" rx="0" fill="rgba(0,160,220,0.12)" clipPath="url(#fv1-clip)" />
         <clipPath id="fv1-clip"><rect x="22" y="160" width="100" height="350" rx="14" /></clipPath>
         {/* Level gauge */}
         <rect x="124" y="230" width="6" height="230" rx="3" fill="none" stroke="#5a90b0" strokeWidth="0.8" />
-        <rect x="125" y="300" width="4" height="160" rx="2" fill="rgba(0,200,255,0.22)" />
+        <rect x="125" y="300" width="4" height="160" rx="2" fill="rgba(0,200,255,0.55)" />
         {[230, 272, 314, 356, 396, 438].map((y, i) => (
           <line key={i} x1="130" y1={y} x2="136" y2={y} stroke="#5a90b0" strokeWidth="0.7" />
         ))}
@@ -116,10 +116,10 @@ function FactoryBg({ phase }: { phase: Phase }) {
         <path d="M268 214 Q268 196 318 196 Q368 196 368 214" fill="none" stroke="#5a90b0" strokeWidth="2" />
         <path d="M268 520 Q268 538 318 542 Q368 538 368 520" fill="none" stroke="#5a90b0" strokeWidth="1.5" />
         <ellipse cx="318" cy="200" rx="50" ry="9" fill="none" stroke="#5a90b0" strokeWidth="1.5" />
-        <rect x="269" y="340" width="98" height="180" rx="0" fill="rgba(0,160,220,0.035)" clipPath="url(#fv2-clip)" />
+        <rect x="269" y="340" width="98" height="180" rx="0" fill="rgba(0,160,220,0.1)" clipPath="url(#fv2-clip)" />
         <clipPath id="fv2-clip"><rect x="268" y="200" width="100" height="320" rx="14" /></clipPath>
         <rect x="256" y="260" width="6" height="220" rx="3" fill="none" stroke="#5a90b0" strokeWidth="0.8" />
-        <rect x="257" y="340" width="4" height="140" rx="2" fill="rgba(0,200,255,0.18)" />
+        <rect x="257" y="340" width="4" height="140" rx="2" fill="rgba(0,200,255,0.45)" />
         <ellipse cx="318" cy="280" rx="22" ry="10" fill="none" stroke="#5a90b0" strokeWidth="1" />
         <circle cx="318" cy="225" r="7" fill="none" stroke="#5a90b0" strokeWidth="0.8" />
         <line x1="368" y1="380" x2="384" y2="380" stroke="#5a90b0" strokeWidth="1" />
@@ -219,7 +219,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
         className="absolute bottom-0 left-0 right-0"
         style={{
           height: '45%',
-          background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(200,100,20,0.055) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(200,100,20,0.18) 0%, transparent 65%)',
         }}
         animate={{ opacity: [0.6, 1, 0.6] }}
         transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
@@ -230,7 +230,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
         className="absolute left-0 right-0 top-0"
         style={{
           height: '30%',
-          background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,90,200,0.045) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,90,200,0.18) 0%, transparent 70%)',
         }}
         animate={{ opacity: [0.4, 0.9, 0.4] }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
@@ -243,7 +243,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
           top: '15%',
           width: 480,
           height: 480,
-          background: 'radial-gradient(circle, rgba(0,100,220,0.06) 0%, rgba(0,200,255,0.025) 40%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(0,100,220,0.22) 0%, rgba(0,200,255,0.08) 40%, transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(24px)',
         }}
@@ -267,7 +267,7 @@ function FactoryBg({ phase }: { phase: Phase }) {
             bottom: '38%',
             width: 3 + (i % 2),
             height: 60,
-            background: 'linear-gradient(to top, transparent, rgba(200,230,255,0.07), transparent)',
+            background: 'linear-gradient(to top, transparent, rgba(200,230,255,0.22), transparent)',
             borderRadius: 6,
             filter: 'blur(4px)',
           }}
@@ -315,12 +315,12 @@ function FactoryBg({ phase }: { phase: Phase }) {
       ))}
 
       {/* ── SCANLINES ── */}
-      <div className="absolute inset-0 scanlines opacity-25" />
+      <div className="absolute inset-0 scanlines opacity-40" />
 
       {/* Moving horizontal scan sweep */}
       <motion.div
         className="absolute left-0 right-0 h-[1px]"
-        style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.055) 30%, rgba(0,200,255,0.1) 50%, rgba(0,200,255,0.055) 70%, transparent 100%)' }}
+        style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.15) 30%, rgba(0,200,255,0.28) 50%, rgba(0,200,255,0.15) 70%, transparent 100%)' }}
         animate={{ top: ['-2%', '102%'] }}
         transition={{ duration: 14, repeat: Infinity, ease: 'linear', repeatDelay: 6 }}
       />
