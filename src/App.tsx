@@ -28,7 +28,7 @@ export default function App() {
   const [sound, setSound]   = useState(true);
   const timers              = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current=[]; };
+  const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
 
   const navigate = useCallback((s: Screen) => {
     playSound('navigate', sound); setScreen(s);
@@ -41,7 +41,6 @@ export default function App() {
     setMic('listening');
     const scenario = voiceCommands[0];
     const now = () => new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-
     timers.current.push(setTimeout(()=>{ playSound('process',sound); setMic('processing'); }, 2100));
     timers.current.push(setTimeout(()=>{
       setMsgs(p=>[...p,{id:`u${Date.now()}`,role:'user',content:scenario.userText,timestamp:now()}]);

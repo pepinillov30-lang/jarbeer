@@ -4,17 +4,16 @@ import { Search, X, FileText, TestTube, Leaf, FlaskConical, History, Receipt, Li
 import { ScreenHeader } from '../components/ScreenHeader';
 import { documents, type DocCategory, type DocItem } from '../data/mockData';
 
-const CATS: { id: DocCategory|'Todos'; label: string; icon: React.ReactNode }[] = [
-  {id:'Todos',    label:'Todos',    icon:<Library size={12}/>},
-  {id:'Receta',   label:'Receta',   icon:<FileText size={12}/>},
-  {id:'COA',      label:'COA',      icon:<TestTube size={12}/>},
-  {id:'Insumo',   label:'Insumo',   icon:<Leaf size={12}/>},
-  {id:'Levadura', label:'Levadura', icon:<FlaskConical size={12}/>},
+const CATS: {id:DocCategory|'Todos';label:string;icon:React.ReactNode}[] = [
+  {id:'Todos',label:'Todos',icon:<Library size={12}/>},
+  {id:'Receta',label:'Receta',icon:<FileText size={12}/>},
+  {id:'COA',label:'COA',icon:<TestTube size={12}/>},
+  {id:'Insumo',label:'Insumo',icon:<Leaf size={12}/>},
+  {id:'Levadura',label:'Levadura',icon:<FlaskConical size={12}/>},
   {id:'Historial',label:'Historial',icon:<History size={12}/>},
-  {id:'Factura',  label:'Factura',  icon:<Receipt size={12}/>},
+  {id:'Factura',label:'Factura',icon:<Receipt size={12}/>},
 ];
-
-const CC: Record<DocCategory, {text:string;border:string;bg:string}> = {
+const CC: Record<DocCategory,{text:string;border:string;bg:string}> = {
   Receta:    {text:'#00e1ff',border:'rgba(0,225,255,0.22)',   bg:'rgba(0,225,255,0.07)'},
   COA:       {text:'#FFAA00',border:'rgba(255,170,0,0.22)',   bg:'rgba(255,170,0,0.07)'},
   Insumo:    {text:'#34d399',border:'rgba(52,211,153,0.22)',  bg:'rgba(52,211,153,0.07)'},
@@ -24,64 +23,49 @@ const CC: Record<DocCategory, {text:string;border:string;bg:string}> = {
 };
 
 export function Documents() {
-  const [query, setQuery]   = useState('');
-  const [cat, setCat]       = useState<DocCategory|'Todos'>('Todos');
-  const [openId, setOpenId] = useState<string|null>(null);
-
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase();
-    return documents.filter(d =>
-      (cat==='Todos'||d.category===cat) &&
-      (!q || d.title.toLowerCase().includes(q) || d.reference.toLowerCase().includes(q) || d.excerpt.toLowerCase().includes(q))
-    );
-  }, [query, cat]);
-
-  const openDoc = openId ? documents.find(d=>d.id===openId) : null;
-
+  const [query,setQuery]=useState('');
+  const [cat,setCat]=useState<DocCategory|'Todos'>('Todos');
+  const [openId,setOpenId]=useState<string|null>(null);
+  const filtered=useMemo(()=>{
+    const q=query.toLowerCase();
+    return documents.filter(d=>(cat==='Todos'||d.category===cat)&&(!q||d.title.toLowerCase().includes(q)||d.reference.toLowerCase().includes(q)||d.excerpt.toLowerCase().includes(q)));
+  },[query,cat]);
+  const openDoc=openId?documents.find(d=>d.id===openId):null;
   return (
     <div className="flex min-h-full flex-col pb-32">
       <ScreenHeader title="Biblioteca" subtitle={`${documents.length} documentos indexados`}
-        right={<span className="font-mono text-xs" style={{color:'rgba(74,96,112,0.7)'}}>{filtered.length} resultado{filtered.length!==1?'s':''}</span>} />
+        right={<span className="font-mono text-xs" style={{color:'rgba(74,96,112,0.7)'}}>{filtered.length} resultado{filtered.length!==1?'s':''}</span>}/>
       <div className="flex flex-col gap-4 px-4">
         <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:0.4}} className="relative">
           <Search size={14} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2" style={{color:'rgba(74,96,112,0.6)'}}/>
           <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar documentos..."
             className="w-full rounded-2xl py-3.5 pl-10 pr-9 font-mono text-sm focus:outline-none"
-            style={{background:'rgba(13,24,36,0.7)',border:'1px solid rgba(255,255,255,0.07)',color:'#e8f0f8',transition:'border-color 0.2s'} as React.CSSProperties}
+            style={{background:'rgba(13,24,36,0.7)',border:'1px solid rgba(255,255,255,0.07)',color:'#e8f0f8'}}
             onFocus={e=>{(e.target as HTMLInputElement).style.borderColor='rgba(0,225,255,0.28)';}}
             onBlur={e=>{(e.target as HTMLInputElement).style.borderColor='rgba(255,255,255,0.07)';}}/>
-          {query && <button onClick={()=>setQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2"><X size={13} style={{color:'rgba(74,96,112,0.6)'}}/></button>}
+          {query&&<button onClick={()=>setQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2"><X size={13} style={{color:'rgba(74,96,112,0.6)'}}/></button>}
         </motion.div>
-
         <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.1}} className="flex gap-2 overflow-x-auto pb-1" style={{scrollbarWidth:'none'}}>
-          {CATS.map(({id,label,icon})=>{
-            const on=cat===id;
-            return (
-              <motion.button key={id} onClick={()=>setCat(id)} whileTap={{scale:0.94}}
-                className="flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 font-mono text-[10px] uppercase tracking-wider transition-all duration-200"
-                style={{background:on?'rgba(0,225,255,0.09)':'rgba(13,24,36,0.7)',border:on?'1px solid rgba(0,225,255,0.26)':'1px solid rgba(255,255,255,0.06)',color:on?'#00e1ff':'rgba(74,96,112,0.7)'}}>
-                <span style={{color:on?'#00e1ff':'rgba(74,96,112,0.55)'}}>{icon}</span>{label}
-              </motion.button>
-            );
-          })}
+          {CATS.map(({id,label,icon})=>{const on=cat===id;return(
+            <motion.button key={id} onClick={()=>setCat(id)} whileTap={{scale:0.94}}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 font-mono text-[10px] uppercase tracking-wider transition-all duration-200"
+              style={{background:on?'rgba(0,225,255,0.09)':'rgba(13,24,36,0.7)',border:on?'1px solid rgba(0,225,255,0.26)':'1px solid rgba(255,255,255,0.06)',color:on?'#00e1ff':'rgba(74,96,112,0.7)'}}>
+              <span style={{color:on?'#00e1ff':'rgba(74,96,112,0.55)'}}>{icon}</span>{label}
+            </motion.button>
+          );})}
         </motion.div>
-
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {filtered.length===0
-              ? <motion.div key="empty" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="py-12 text-center">
-                  <Library size={32} className="mx-auto mb-3 opacity-20" style={{color:'#00e1ff'}}/>
-                  <p className="font-mono text-sm" style={{color:'rgba(74,96,112,0.6)'}}>Sin resultados</p>
-                </motion.div>
-              : filtered.map((doc,idx)=><DocCard key={doc.id} doc={doc} delay={idx*0.04} onOpen={()=>setOpenId(doc.id)}/>)
-            }
+              ?<motion.div key="empty" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="py-12 text-center">
+                 <Library size={32} className="mx-auto mb-3 opacity-20" style={{color:'#00e1ff'}}/>
+                 <p className="font-mono text-sm" style={{color:'rgba(74,96,112,0.6)'}}>Sin resultados</p>
+               </motion.div>
+              :filtered.map((doc,idx)=><DocCard key={doc.id} doc={doc} delay={idx*0.04} onOpen={()=>setOpenId(doc.id)}/>)}
           </AnimatePresence>
         </div>
       </div>
-
-      <AnimatePresence>
-        {openDoc && <DocDetail doc={openDoc} onClose={()=>setOpenId(null)}/>}
-      </AnimatePresence>
+      <AnimatePresence>{openDoc&&<DocDetail doc={openDoc} onClose={()=>setOpenId(null)}/>}</AnimatePresence>
     </div>
   );
 }
@@ -93,8 +77,7 @@ function DocCard({doc,delay,onOpen}:{doc:DocItem;delay:number;onOpen:()=>void}) 
       onClick={onOpen} className="group w-full rounded-2xl p-4 text-left transition-all duration-200"
       style={{background:'rgba(13,24,36,0.6)',border:'1px solid rgba(255,255,255,0.06)'}}
       onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(0,225,255,0.16)';}}
-      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.06)';}}
-    >
+      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.06)';}}>
       <div className="flex items-start gap-3">
         <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{background:c.bg,border:`1px solid ${c.border}`,color:c.text}}><FileText size={17}/></div>
         <div className="min-w-0 flex-1">
